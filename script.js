@@ -5,37 +5,37 @@ document.getElementById("updateButton")
 
 
 
-/* Função que gera dados fictícios */
+ /*Função que gera dados fictícios*/
 
 function atualizarDados() {
     
 
-    /* Temperatura fictícia (20 a 30 °C) 
+    /*Temperatura fictícia (20 a 30 °C) */
     let temp = (20 + Math.random() * 10).toFixed(1);
 
-    /* Umidade fictícia (40 a 80 %) 
+     /*Umidade fictícia (40 a 80 %) */  
     let hum = (40 + Math.random() * 40).toFixed(0);
 
-    /* Estado fictício da lâmpada 
+     /*Estado fictício da lâmpada*/
     let lampOn = Math.random() > 0.5;
 
-    /* Estado fictício da porta 
+     /*Estado fictício da porta*/
     let doorOpen = Math.random() > 0.5;
 
 
-    /* Atualizando temperatura 
+     /*Atualizando temperatura*/    
 
     document.getElementById("temperature")
         .innerText = temp + " °C";
 
 
-    /* Atualizando umidade 
+     /*Atualizando umidade */ 
 
     document.getElementById("humidity")
         .innerText = hum + " %";
 
 
-    /* Atualizando lâmpada 
+     /*Atualizando lâmpada */ 
 
     let lamp = document.getElementById("lampStatus");
 
@@ -49,7 +49,7 @@ function atualizarDados() {
     }
 
 
-    /* Atualizando porta
+     /*Atualizando porta*/
 
     let door = document.getElementById("doorStatus");
 
@@ -63,9 +63,9 @@ function atualizarDados() {
     }
 
 }
-}
+
 
 /* Atualiza automaticamente ao abrir */
-}
+
 
 atualizarDados();
