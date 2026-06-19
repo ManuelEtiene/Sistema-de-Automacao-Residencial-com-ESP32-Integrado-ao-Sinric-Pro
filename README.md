@@ -11,10 +11,10 @@ Este projeto faz parte do **Projeto Integrador I** da **UFSC (Campus Araranguá)
 
 # Funcionalidades
 
--Controle de iluminação/cargas via interface web.
--Monitoramento em tempo real (Feedback de estado).
--Integração com assistentes de voz (Alexa).
--Interface responsiva para dispositivos móveis.
+* Controle de iluminação/cargas via interface web.
+* Monitoramento em tempo real (Feedback de estado).
+* Integração com assistentes de voz (Alexa).
+* Interface responsiva para dispositivos móveis.
 
 # Como Rodar o Projeto
 
@@ -32,6 +32,5 @@ Este projeto faz parte do **Projeto Integrador I** da **UFSC (Campus Araranguá)
 * Mamadjan Jaló
 
 # Orientação
-* **Professores:**
 * Olga Yevseyeva
 * Jim Lau
