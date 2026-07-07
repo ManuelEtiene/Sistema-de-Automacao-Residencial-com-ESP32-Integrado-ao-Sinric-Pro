@@ -1,22 +1,31 @@
 # Sistema de Automação Residencial com ESP32 e Sinric Pro
 
-#Descrição
+# Descrição
 
 Este projeto faz parte do **Projeto Integrador I** da **UFSC (Campus Araranguá)**. O objetivo é desenvolver um sistema de automação acessível, permitindo o controle de dispositivos residenciais via web e comando de voz, e simultaneamente envolvendo o hardware (ESP32, sensores).
+# Objetivos do Projeto 
 
-# Tecnologias Utilizadas
-
-* **Hardware:** ESP32
-* **Plataforma Cloud:** Sinric Pro 
-* **Frontend:** HTML5, CSS3 e JavaScript
-* **Comunicação:** Wi-Fi e Protocolo MQTT/Websockets
 
 # Funcionalidades
-
 * Controle de iluminação/cargas via interface web.
 * Monitoramento em tempo real (Feedback de estado).
 * Integração com assistentes de voz (Alexa).
 * Interface responsiva para dispositivos móveis.
+
+# Tecnologias Utilizadas
+
+* **Hardware:** ESP32
+* **Plataforma Cloud:** Sinric Pro
+* # software  
+* **Frontend:** HTML5, CSS3 e JavaScript
+* **Comunicação:** Wi-Fi e Protocolo MQTT/Websockets
+
+# Sensores Implementados
+
+
+# Especificações Técnicas     
+
+#Arquitetura do Sistema
 
 # Como Rodar o Projeto
 
