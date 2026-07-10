@@ -57,5 +57,17 @@ void loop() {
   Serial.print(luminosidade);
   Serial.println("%");
 
-  delay(2000);
-}
+```
+## Saída no Terminal 
+```text
+Iniciando leitura do LDR...
+Leitura ADC: 1433 | Luminosidade: 35%
+---------------------------------------
+Leitura ADC: 1474 | Luminosidade: 36%
+---------------------------------------
+Leitura ADC: 2457 | Luminosidade: 60%
+---------------------------------------
+Leitura ADC: 2866 | Luminosidade: 70%
+---------------------------------------
+Leitura ADC: 3685 | Luminosidade: 90%
+---------------------------------------
