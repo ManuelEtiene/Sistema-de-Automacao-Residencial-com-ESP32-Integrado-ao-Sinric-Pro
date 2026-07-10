@@ -1,1 +1,24 @@
+MAPEAMENTO DE PINOS (PINOUT DO ESP32)
+-------------------------------------------------------------------------------
+As ligações físicas dos periféricos no módulo ESP32 foram padronizadas da 
+seguinte forma:
+
+   [PERIFÉRICO]     -> [PINO ESP32] -> [TIPO DE SINAL / OBSERVAÇÃO]
+   ------------------------------------------------------------------
+   BMP280 (VCC)     -> 3.3V         -> Alimentação do sensor
+   BMP280 (GND)     -> GND          -> Referência de terra
+   BMP280 (SDA)     -> GPIO 21      -> Barramento I2C (Dados Compartilhados)
+   BMP280 (SCL)     -> GPIO 22      -> Barramento I2C (Clock Compartilhado)
+   
+   LCD 16x2 (VCC)   -> 5V (VIN)     -> Alimentação do Display (Adaptador I2C)
+   LCD 16x2 (GND)   -> GND          -> Referência de terra
+   LCD 16x2 (SDA)   -> GPIO 21      -> Barramento I2C (Dados Compartilhados)
+   LCD 16x2 (SCL)   -> GPIO 22      -> Barramento I2C (Clock Compartilhado)
+   
+   Sensor Porta     -> GPIO 14      -> Digital INPUT com PULLUP Interno
+                                       (GND no Comum, Sinal no NF/NA)
+   Sensor LDR       -> GPIO 34      -> Analógico INPUT (Mapeado de 0 a 100%)
+   
+   Módulo Relé      -> GPIO 25      -> Digital OUTPUT (Controlo do AC)
+   LED Lâmpada      -> GPIO 2       -> Digital OUTPUT (Iluminação da Sala)
 
