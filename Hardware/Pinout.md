@@ -1,4 +1,4 @@
-MAPEAMENTO DE PINOS (PINOUT DO ESP32)
+3. MAPEAMENTO DE PINOS (PINOUT DO ESP32)
 -------------------------------------------------------------------------------
 As ligações físicas dos periféricos no módulo ESP32 foram padronizadas da 
 seguinte forma:
@@ -21,7 +21,3 @@ seguinte forma:
    
    Módulo Relé      -> GPIO 25      -> Digital OUTPUT (Controlo do AC)
    LED Lâmpada      -> GPIO 2       -> Digital OUTPUT (Iluminação da Sala)
-
-
-
-
