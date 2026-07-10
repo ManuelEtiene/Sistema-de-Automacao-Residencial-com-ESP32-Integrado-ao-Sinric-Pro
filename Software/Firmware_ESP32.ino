@@ -1,245 +1,325 @@
-
 #include <WiFi.h>
+#define MQTT_MAX_PACKET_SIZE 512   // Deve vir antes do PubSubClient
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 #include <Wire.h>
 #include <Adafruit_BMP280.h>
-#include <ArduinoJson.h>
-#include <LiquidCrystal_I2C.h>
+#include <LiquidCrystal_PCF8574.h>
 
-// --- Configurações de Rede e MQTT ---
-const char* ssid = "NOME_DA_SUA_REDE_WIFI";
-const char* password = "SENHA_DO_SEU_WIFI";
+// =====================================================
+// WIFI
+// =====================================================
+const char* ssid = "Mamadjam";
+const char* password = "12345678";
+
+// =====================================================
+// MQTT
+// =====================================================
 const char* mqtt_server = "broker.hivemq.com";
-const int mqtt_port = 1883;
+const char* topic_pub = "mamadjam123/iot/sensores";
+const char* topic_sub = "mamadjam123/iot/comandos";
 
-const char* topic_publish = "mamadjam123/iot/sensores";
-const char* topic_subscribe = "mamadjam123/iot/comandos";
-
-// --- Definição dos Pinos ---
-#define PINO_PORTA 14
-#define PINO_LDR   34
-#define PINO_RELE  25
-#define PINO_LED   2
-
-// --- Instâncias dos Periféricos ---
-Adafruit_BMP280 bmp;
-LiquidCrystal_I2C lcd(0x27, 16, 2); // Verifique se o endereço do seu LCD é 0x27 ou 0x3F
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// --- Variáveis de Controle Global ---
-float temperatura = 0.0;
-int luminosidade = 0;
-bool portaAberta = false;
-bool estadoAC = false;
-bool estadoLuz = false;
+// =====================================================
+// HARDWARE (PINOS)
+// =====================================================
+#define RELAY_AC_PIN 25
+#define LED_LAMP_PIN 2
+#define SWITCH_PIN   14
+#define LDR_PIN      34
+
+// =====================================================
+// CONFIGURAÇÕES DA AUTOMAÇÃO
+// =====================================================
+const float TEMP_LIGA_AC = 26.0;
+const float TEMP_DESLIGA_AC = 24.0;
+const int LIMIAR_ESCURO = 40;           // Agora em percentagem (0 a 100%)
+
+const long TEMPO_ABERTA_ALERTA = 10000; // 10 segundos
+const long TEMPO_CORTESIA_LUZ = 3000;   // 3 segundos
+
+// =====================================================
+// OBJETOS E VARIÁVEIS DE CONTROLE
+// =====================================================
+Adafruit_BMP280 bmp;
+LiquidCrystal_PCF8574 lcd(0x27);
+
+unsigned long timerPorta = 0;
+unsigned long timerLuz = 0;
+unsigned long lastUpdate = 0;
+unsigned long ultimoEnvio = 0;
+
+bool acBloqueado = false;
+bool luzAtiva = false;
+
+// Controle de Modos
 bool modoManual = false;
+bool estadoManualAC = false;
+bool estadoManualLuz = false;
 
-unsigned long tempoUltimaPublicacao = 0;
-unsigned long tempoPortaAberta = 0;
-unsigned long tempoLuzCortesia = 0;
-bool cronometroPortaAtivo = false;
-bool cortesiaAtiva = false;
-
-// --- Função de Inicialização do Wi-Fi ---
+// =====================================================
+// CONEXÃO WIFI
+// =====================================================
 void setup_wifi() {
   delay(10);
-  lcd.clear();
-  lcd.print("Conectando Wi-Fi...");
-  Serial.print("Conectando em: ");
-  Serial.println(ssid);
-
+  Serial.println("\n[WIFI] Inicializando conexao...");
   WiFi.begin(ssid, password);
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nWi-Fi Conectado!");
-  lcd.clear();
-  lcd.print("Wi-Fi Conectado!");
+
+  Serial.println("\n[WIFI] Conectado!");
+  Serial.print("[WIFI] IP: ");
+  Serial.println(WiFi.localIP());
 }
 
-// --- Callback: Processamento de Comandos Recebidos via MQTT ---
+// =====================================================
+// CALLBACK MQTT (RECEBIMENTO DE COMANDOS)
+// =====================================================
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Comando recebido no tópico [");
-  Serial.print(topic);
-  Serial.print("]: ");
-  
-  String mensagem = "";
+  String mensagem;
   for (int i = 0; i < length; i++) {
     mensagem += (char)payload[i];
   }
+
+  Serial.println("\n==============================");
+  Serial.print("[MQTT] Mensagem Recebida: ");
   Serial.println(mensagem);
+  Serial.println("==============================");
 
-  // Parse do comando JSON vindo do Dashboard
-  JsonDocument doc;
-  DeserializationError error = deserializeJson(doc, mensagem);
-  if (error) {
-    Serial.print("Falha no parse do JSON: ");
-    Serial.println(error.c_str());
-    return;
+  if (mensagem == "AUTO_ON") {
+    modoManual = false;
+    Serial.println("[MODO] AUTOMATICO ATIVADO");
   }
-
-  // Processamento das Flags de Controle Manual/Automático
-  if (doc.containsKey("cmd")) {
-    String cmd = doc["cmd"];
-    
-    if (cmd == "AUTO_ON") {
-      modoManual = false;
-      Serial.println("Modo Automático Ativado.");
-    } else {
-      modoManual = true; // Qualquer outro comando ativa o modo manual
-      
-      if (cmd == "AC_ON") {
-        estadoAC = true;
-        digitalWrite(PINO_RELE, HIGH);
-      } else if (cmd == "AC_OFF") {
-        estadoAC = false;
-        digitalWrite(PINO_RELE, LOW);
-      } else if (cmd == "LUZ_ON") {
-        estadoLuz = true;
-        digitalWrite(PINO_LED, HIGH);
-      } else if (cmd == "LUZ_OFF") {
-        estadoLuz = false;
-        digitalWrite(PINO_LED, LOW);
-      }
-    }
+  else if (mensagem == "MANUAL_ON") {
+    modoManual = true;
+    Serial.println("[MODO] MANUAL ATIVADO");
+  }
+  else if (mensagem == "AC_ON") {
+    modoManual = true;
+    estadoManualAC = true;
+    Serial.println("[AC] LIGADO MANUALMENTE");
+  }
+  else if (mensagem == "AC_OFF") {
+    modoManual = true;
+    estadoManualAC = false;
+    Serial.println("[AC] DESLIGADO MANUALMENTE");
+  }
+  else if (mensagem == "LUZ_ON") {
+    modoManual = true;
+    estadoManualLuz = true;
+    Serial.println("[LUZ] LIGADA MANUALMENTE");
+  }
+  else if (mensagem == "LUZ_OFF") {
+    modoManual = true;
+    estadoManualLuz = false;
+    Serial.println("[LUZ] DESLIGADA MANUALMENTE");
   }
 }
 
-// --- Reconexão com o Broker MQTT ---
+// =====================================================
+// RECONEXÃO MQTT
+// =====================================================
 void reconnect() {
   while (!client.connected()) {
-    Serial.print("Tentando conexão MQTT...");
-    String clientId = "ESP32Client-" + String(random(0, 10000));
-    
+    Serial.println("[MQTT] Conectando ao broker...");
+    String clientId = "ESP32Client-" + String(random(0xffff), HEX);
+
     if (client.connect(clientId.c_str())) {
-      Serial.println("Conectado ao HiveMQ!");
-      client.subscribe(topic_subscribe);
+      Serial.println("[MQTT] Conectado com sucesso!");
+      client.subscribe(topic_sub);
+      Serial.print("[MQTT] Inscrito no topico: ");
+      Serial.println(topic_sub);
     } else {
-      Serial.print("Falhou, rc=");
-      Serial.print(client.state());
-      Serial.println(" Tentando novamente em 5 segundos");
+      Serial.print("[MQTT] Erro de conexao: ");
+      Serial.println(client.state());
       delay(5000);
     }
   }
 }
 
+// =====================================================
+// CONFIGURAÇÃO INICIAL (SETUP)
+// =====================================================
 void setup() {
   Serial.begin(115200);
-  
-  // Configuração dos Pinos I/O
-  pinMode(PINO_PORTA, INPUT_PULLUP);
-  pinMode(PINO_LDR, INPUT);
-  pinMode(PINO_RELE, OUTPUT);
-  pinMode(PINO_LED, OUTPUT);
-  
-  digitalWrite(PINO_RELE, LOW);
-  digitalWrite(PINO_LED, LOW);
+  Serial.println("\n====================================");
+  Serial.println("    SISTEMA DE AUTOMACAO INICIADO   ");
+  Serial.println("====================================");
 
-  // Inicialização do LCD
-  lcd.init();
-  lcd.backlight();
-  lcd.print("Iniciando SMARTHOME");
+  // Configuração dos Pinos
+  pinMode(RELAY_AC_PIN, OUTPUT);
+  pinMode(LED_LAMP_PIN, OUTPUT);
+  pinMode(SWITCH_PIN, INPUT_PULLUP);
 
-  // Inicialização do Sensor BMP280
+  // Estados Iniciais (Tudo desligado)
+  digitalWrite(RELAY_AC_PIN, HIGH);
+  digitalWrite(LED_LAMP_PIN, LOW);
+
+  // Inicialização I2C e Periféricos
+  Wire.begin(21, 22);
+  lcd.begin(16, 2);
+  lcd.setBacklight(255);
+  lcd.print("INICIANDO...");
+
+  // Inicialização BMP280
   if (!bmp.begin(0x76)) {
-    Serial.println("Erro: BMP280 não encontrado!");
-    lcd.clear();
-    lcd.print("Erro: BMP280");
-    while (1);
+    Serial.println("[ERRO CRITICO] Sensor BMP280 nao detectado!");
+    lcd.setCursor(0,1);
+    lcd.print("ERRO BMP280");
+    while (1); // Para o sistema aqui se o sensor falhar
   }
+  Serial.println("[BMP280] Sensor pronto.");
 
   setup_wifi();
-  client.setServer(mqtt_server, mqtt_port);
+  client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
+
+  lcd.clear();
+  Serial.println("[SETUP] Concluido com sucesso!\n");
 }
 
+// =====================================================
+// LOOP PRINCIPAL
+// =====================================================
 void loop() {
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
 
-  unsigned long tempoAtual = millis();
-
-  // --- 1. LEITURA DOS SENSORES ---
-  temperatura = bmp.readTemperature();
+  // Leituras dos sensores
+  float temperatura = bmp.readTemperature();
+  // Transforma o valor analógico em 0 a 100%
+  int luminosidade = map(analogRead(LDR_PIN), 0, 4095, 0, 100); 
   
-  int leituraLDR = analogRead(PINO_LDR);
-  luminosidade = map(leituraLDR, 0, 4095, 0, 100); // Mapeia para 0-100%
-  
-  // Porta com PULLUP: LOW significa fechada (GND), HIGH significa aberta
-  portaAberta = (digitalRead(PINO_PORTA) == HIGH); 
+  // INVERSÃO DA LÓGICA DA PORTA: 
+  // Solto (HIGH) = FECHADA. Apertado (LOW) = ABERTA.
+  bool portaAberta = (digitalRead(SWITCH_PIN) == LOW);
 
-  // --- 2. LÓGICA DE AUTOMAÇÃO LOCAL (MODO AUTOMÁTICO) ---
-  if (!modoManual) {
-    
-    // Gestão Térmica (Ar-Condicionado por Histerese)
-    if (temperatura >= 26.0) {
-      estadoAC = true;
-    } else if (temperatura <= 24.0) {
-      estadoAC = false;
+  // =====================================================
+  // SEGURANÇA DA PORTA (TEMPORIZADOR DO ALERTA)
+  // =====================================================
+  if (portaAberta) {
+    if (timerPorta == 0) {
+      timerPorta = millis();
     }
-
-    // Trava de Segurança: Se a porta ficar aberta > 10 segundos, desliga o AC
-    if (portaAberta) {
-      if (!cronometroPortaAtivo) {
-        tempoPortaAberta = tempoAtual;
-        cronometroPortaAtivo = true;
-      } else if (tempoAtual - tempoPortaAberta >= 10000) {
-        estadoAC = false; // Força o desligamento por segurança energética
+    if (millis() - timerPorta > TEMPO_ABERTA_ALERTA) {
+      if (!acBloqueado) {
+        Serial.println("[ALERTA] Porta aberta detectada por muito tempo!");
       }
+      acBloqueado = true;
+    }
+  } else {
+    timerPorta = 0;
+    acBloqueado = false;
+  }
+
+  // =====================================================
+  // GERENCIAMENTO DO AR-CONDICIONADO
+  // =====================================================
+  if (modoManual) {
+    digitalWrite(RELAY_AC_PIN, estadoManualAC ? LOW : HIGH);
+  } 
+  else {
+    if (acBloqueado) {
+      digitalWrite(RELAY_AC_PIN, HIGH); // Desliga preventivamente por economia
     } else {
-      cronometroPortaAtivo = false;
+      if (temperatura >= TEMP_LIGA_AC)    digitalWrite(RELAY_AC_PIN, LOW);
+      if (temperatura <= TEMP_DESLIGA_AC) digitalWrite(RELAY_AC_PIN, HIGH);
     }
-    digitalWrite(PINO_RELE, estadoAC ? HIGH : LOW);
-
-    // Gestão de Iluminação Inteligente com Luz de Cortesia
-    if (portaAberta && luminosidade < 40) {
-      estadoLuz = true;
-      cortesiaAtiva = false;
-    } else if (!portaAberta && estadoLuz && !cortesiaAtiva) {
-      // Inicia temporizador de cortesia de 3 segundos ao fechar a porta
-      tempoLuzCortesia = tempoAtual;
-      cortesiaAtiva = true;
-    }
-
-    if (cortesiaAtiva && (tempoAtual - tempoLuzCortesia >= 3000)) {
-      estadoLuz = false;
-      cortesiaAtiva = false;
-    }
-    digitalWrite(PINO_LED, estadoLuz ? HIGH : LOW);
   }
 
-  // --- 3. ATUALIZAÇÃO DO DISPLAY LCD LOCAL ---
-  static unsigned long tempoUltimoLCD = 0;
-  if (tempoAtual - tempoUltimoLCD >= 1000) {
-    tempoUltimoLCD = tempoAtual;
+  // =====================================================
+  // GERENCIAMENTO DA LÂMPADA (LED)
+  // =====================================================
+  if (modoManual) {
+    digitalWrite(LED_LAMP_PIN, estadoManualLuz ? HIGH : LOW);
+  } 
+  else {
+    if (portaAberta) {
+      // Se a leitura for menor que o limiar, significa que está escuro
+      if (luminosidade < LIMIAR_ESCURO) {
+        digitalWrite(LED_LAMP_PIN, HIGH);
+        luzAtiva = true;
+        timerLuz = millis(); // Mantém o tempo renovado enquanto a porta continuar aberta
+      } else {
+        digitalWrite(LED_LAMP_PIN, LOW);
+        luzAtiva = false;
+      }
+    } 
+    else {
+      // Porta Fechada
+      if (luzAtiva) {
+        if (millis() - timerLuz > TEMPO_CORTESIA_LUZ) {
+          digitalWrite(LED_LAMP_PIN, LOW);
+          luzAtiva = false;
+        }
+      } else {
+        digitalWrite(LED_LAMP_PIN, LOW);
+      }
+    }
+  }
+
+  // =====================================================
+  // TRANSMISSÃO DE TELEMETRIA MQTT (A CADA 5 SEGUNDOS)
+  // =====================================================
+  if (millis() - ultimoEnvio > 5000) {
+    ultimoEnvio = millis();
+
+    StaticJsonDocument<256> doc;
+    doc["temperatura"] = temperatura;
+    doc["luminosidade"] = luminosidade;
+    doc["porta"] = portaAberta;
+    doc["ac"] = (digitalRead(RELAY_AC_PIN) == LOW);
+    doc["modoManual"] = modoManual;
+    doc["luz"] = (digitalRead(LED_LAMP_PIN) == HIGH);
+
+    char buffer[256];
+    size_t tamanho = serializeJson(doc, buffer, sizeof(buffer)); 
+
+    bool enviado = client.publish(topic_pub, (uint8_t*)buffer, tamanho, false);
+
+    if (enviado) {
+      Serial.println("[MQTT] Dados publicados com sucesso!");
+    } else {
+      Serial.println("[MQTT ERROR] Falha no envio — verifique MQTT_MAX_PACKET_SIZE");
+    }
+  }
+
+  // =====================================================
+  // MONITORAMENTO LOCAL (LCD + SERIAL A CADA 1 SEGUNDO)
+  // =====================================================
+  if (millis() - lastUpdate > 1000) {
+    lastUpdate = millis();
+
+    Serial.println("\n========== TELEMETRIA TEMPO REAL ==========");
+    Serial.printf("Temperatura : %.2f C\n", temperatura);
+    Serial.printf("Luminosidade: %d %%\n", luminosidade);
+    Serial.printf("Status Porta: %s\n", portaAberta ? "ABERTA (Apertado)" : "FECHADA (Solto)");
+    Serial.printf("Status AC   : %s\n", digitalRead(RELAY_AC_PIN) == LOW ? "LIGADO" : "DESLIGADO");
+    Serial.printf("Status LUZ  : %s\n", digitalRead(LED_LAMP_PIN) == HIGH ? "LIGADA" : "DESLIGADA");
+    Serial.printf("Modo Sistema: %s\n", modoManual ? "MANUAL" : "AUTOMATICO");
+    if (acBloqueado) Serial.println("[!] ALERTA ENERGÉTICO: AC travado em OFF devido a porta aberta.");
+    Serial.println("===========================================");
+
+    // Renderização LCD
     lcd.setCursor(0, 0);
-    lcd.print("T: " + String(temperatura, 1) + "C  L: " + String(luminosidade) + "% ");
+    lcd.print("T:"); lcd.print(temperatura, 1);
+    lcd.print(" "); lcd.print(modoManual ? "MAN" : "AUT");
+    lcd.print("   ");
+
     lcd.setCursor(0, 1);
-    lcd.print(modoManual ? "M:MANUAL " : "M:AUTO   ");
-    lcd.print(portaAberta ? "P:ABER" : "P:FECH");
-  }
-
-  // --- 4. ENVIO DE TELEMETRIA (JSON VIA MQTT) A CADA 5 SEGUNDOS ---
-  if (tempoAtual - tempoUltimaPublicacao >= 5000) {
-    tempoUltimaPublicacao = tempoAtual;
-
-    JsonDocument docSaida;
-    docSaida["temperatura"] = temperatura;
-    docSaida["luminosidade"] = luminosidade;
-    docSaida["porta"] = portaAberta;
-    docSaida["ac"] = estadoAC;
-    docSaida["modoManual"] = modoManual;
-    docSaida["luz"] = estadoLuz;
-
-    char bufferJson[256];
-    serializeJson(docSaida, bufferJson);
-    
-    client.publish(topic_publish, bufferJson);
-    Serial.print("Telemetria publicada: ");
-    Serial.println(bufferJson);
+    if (acBloqueado && !modoManual) {
+      lcd.print("FECHE A PORTA!  ");
+    } else {
+      lcd.print("AC:"); lcd.print(digitalRead(RELAY_AC_PIN) == LOW ? "ON " : "OFF");
+      lcd.print(" L:");  lcd.print(digitalRead(LED_LAMP_PIN) == HIGH ? "ON " : "OFF");
+      lcd.print(" ");
+    }
   }
 }
