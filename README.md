@@ -29,7 +29,7 @@ Este projeto faz parte do **Projeto Integrador I** da **UFSC (Campus Araranguá)
 * Programação do ESP32 utilizando Arduino IDE
 * **Frontend:** HTML5, CSS3 e JavaScript
 * **Comunicação:** Wi-Fi e Protocolo MQTT/Websockets
-* 
+ 
 ### Transporte e Protocolos
 * **Rede:** Wi-Fi Local.
 * **Protocolo:** MQTT (Message Queuing Telemetry Transport) via HiveMQ Público (porta 1883).
