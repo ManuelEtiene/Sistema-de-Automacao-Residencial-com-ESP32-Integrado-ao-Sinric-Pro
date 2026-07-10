@@ -19,5 +19,3 @@
 | **LED Lâmpada** | GPIO 2 | Digital OUTPUT (Iluminação da Sala) |
 
 ## 🔌 Diagrama Elétrico e Conexões
-
-<img width="515" height="408" alt="image" src="https://github.com/user-attachments/assets/94c1a378-85d5-4d34-99f4-e48468439133" />
