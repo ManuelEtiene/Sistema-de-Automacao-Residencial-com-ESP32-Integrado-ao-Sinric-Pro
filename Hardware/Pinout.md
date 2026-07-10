@@ -21,3 +21,6 @@
 | └─ LED Lâmpada | `GPIO 2` | Digital OUTPUT (Iluminação da Sala / LED Interno) |
 
 ## 🔌 Diagrama Elétrico e Conexões
+
+<img width="515" height="375" alt="image" src="https://github.com/user-attachments/assets/7619d271-b63c-4145-a8a8-8a86d9587428" />
+
