@@ -18,8 +18,8 @@ Este projeto faz parte do **Projeto Integrador I** da **UFSC (Campus Araranguá)
 
 # Tecnologias Utilizadas
 
-* **Hardware:**
-* * **Microcontrolador:** ESP32 (Arquitetura Xtensa Dual-Core de 32 bits, Wi-Fi e Bluetooth integrados).
+* ## Hardware:
+* **Microcontrolador:** ESP32 (Arquitetura Xtensa Dual-Core de 32 bits, Wi-Fi e Bluetooth integrados).
 * **Sensores:** Sensor de pressão e temperatura BMP280 (I2C) e Sensor de Luminosidade LDR (Analógico).
 * **Atuadores:** Módulo Relé (Ar-Condicionado) e LED (Lâmpada da Sala).
 * **Interface Local:** Display LCD 16x2 com módulo adaptador I2C PCF8574.
