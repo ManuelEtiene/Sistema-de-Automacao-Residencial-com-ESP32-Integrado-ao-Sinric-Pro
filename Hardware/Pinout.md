@@ -22,3 +22,6 @@ seguinte forma:
    Módulo Relé      -> GPIO 25      -> Digital OUTPUT (Controlo do AC)
    LED Lâmpada      -> GPIO 2       -> Digital OUTPUT (Iluminação da Sala)
 
+   <img width="564" height="403" alt="image" src="https://github.com/user-attachments/assets/8de85a3f-5325-474c-bb6a-fb9f6951176c" />
+
+
