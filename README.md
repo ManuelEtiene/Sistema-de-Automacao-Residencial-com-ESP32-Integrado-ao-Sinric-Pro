@@ -33,28 +33,53 @@ O sistema destaca-se pela sua arquitetura híbrida robusta (*Edge/Cloud*). O pro
 
 ---
 
-## 📂 Estrutura do Repositório
+## 📂 Repository Structure
 
-O repositório está organizado para separar as lógicas de nuvem e borda:
+The project is structured into modular directories to separate cloud services from edge computing logic:
 
-- 📁 `Backend_Frontend/`: Contém a API REST em Node.js (`server.js`), configurações do banco (`sensorData.js`), dependências (`package.json`) e a interface gráfica na pasta `public/` (HTML/CSS/JS).
-- 📁 `Hardware/`: Documentação isolada dos sensores (BMP280, LDR) e mapeamento de pinos (`Pinout.md`).
-- 📁 `Software/`: Código-fonte embarcado (`Firmware_ESP32.ino`) e tutoriais de compilação.
+```text
+📦 SmartHome-IoT
+├── 📂 Backend_Frontend/            # Módulo de Nuvem e Interface Web
+│   ├── 📂 public/                  # Interface do Dashboard (HTML, CSS, JS)
+│   ├── 📄 server.js                # Servidor backend Node.js e API REST
+│   ├── 📄 sensorData.js            # Schema do banco de dados MongoDB
+│   └── 📄 package.json             # Dependências do Node
+├── 📂 Hardware/                    # Documentação da Camada Física
+│   ├── 📂 BMP280/                  # Especificações do sensor ambiental
+│   ├── 📂 LDR/                     # Especificações do sensor de luminosidade
+│   └── 📄 Pinout.md                # Guia completo de conexões do ESP32
+├── 📂 Software/                    # Módulo de Edge Computing
+│   ├── 📄 Firmware_ESP32.ino       # Código embarcado principal em C++
+│   └── 📄 Tutorial_Instalacao.md   # Guia de instalação e upload
+└── 📂 images/                      # Imagens para o README.md
+```
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-### Hardware
-- **Microcontrolador:** ESP32 (Wi-Fi integrado).
-- **Sensores:** BME280 (I2C), LDR em divisor de tensão e Chave Switch Tátil (Porta).
-- **Atuadores/Saídas:** Módulo Relé de 1 Canal, Display LCD 16x2 (I2C) e LED de status.
+### ⚙️ Hardware (Componentes Utilizados)
 
-### Software e Protocolos
-- **Backend:** Node.js com Express.
-- **Banco de Dados:** MongoDB (via Mongoose).
-- **Frontend:** HTML5, CSS3, JavaScript (HTTP Polling constante a cada 3s para evitar travamentos).
-- **Mensageria:** Protocolo MQTT (Broker Público HiveMQ - Porta 1883).
+| Componente | Quantidade | Função / Especificação |
+| :--- | :---: | :--- |
+| **ESP32** | 1x | Microcontrolador principal |
+| **Sensor BME280** | 1x | Leitura de Temperatura, Umidade e Pressão (I2C) |
+| **Fotorresistor LDR** | 1x | Sensor de luminosidade (5mm) |
+| **Micro-chave (Endstop)** | 1x | Chave fim de curso com alavanca (Sensor de porta) |
+| **Módulo Relé (5V)** | 1x | Controle de cargas de potência AC (1 Canal) |
+| **Display LCD 16x2** | 1x | Interface visual com Módulo Adaptador I2C (PCF8574) |
+| **LED** | 1x | Indicador visual de status da iluminação de cortesia |
+| **Resistores de 1kΩ** | 2x | Divisor de tensão (LDR) e limitador de corrente (LED) |
+| **Protoboard & Jumpers** | - | Matriz de contatos e cabeamento geral |
+
+### 💻 Software e Protocolos
+
+| Camada / Serviço | Tecnologia | Descrição |
+| :--- | :--- | :--- |
+| **Backend** | Node.js com Express | Servidor web e API |
+| **Banco de Dados** | MongoDB (via Mongoose) | Armazenamento de registros |
+| **Frontend** | HTML5, CSS3, JavaScript | Interface com HTTP Polling constante a cada 3s |
+| **Mensageria** | Protocolo MQTT | Broker Público HiveMQ (Porta 1883) |
 
 ---
 
@@ -107,15 +132,14 @@ AUTOMAÇÃO DA ILUMINAÇÃO
 
 ---
 
-## 💻 Estrutura de Software (Back-end e Front-end)
+## 🎬 Demonstração do Funcionamento Prático
 
 <div align="center">
-  <table border="0">
-    <tr>
-      <td align="center"><b>Servidor Backend (Node.js)</b><br/><img src="[INSERIR URL DA IMAGEM DO BACK END AQUI]" width="390"/></td>
-      <td align="center"><b>Interface de Controle (Frontend)</b><br/><img src="[INSERIR URL DA IMAGEM DO FRONT END NO NAVEGADOR AQUI]" width="390"/></td>
-    </tr>
-  </table>
+
+Assista ao vídeo demonstrativo completo da automação residencial em funcionamento:
+
+[![Assista no YouTube](https://img.shields.io/badge/YouTube-Assistir_Demonstração-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=j-FZEJOe_pA)
+
 </div>
 
 ---
@@ -146,3 +170,5 @@ AUTOMAÇÃO DA ILUMINAÇÃO
 * **Adir Leonardo Arruda Brasil** ─ [GitHub](https://github.com/leunz)
 * **Mamadjan Jaló** ───────── [GitHub](https://github.com/JaloMamadjam)
 * **Manuel Etiene da Silva João** ─ [GitHub](https://github.com/ManuelEtiene) 
+
+---
