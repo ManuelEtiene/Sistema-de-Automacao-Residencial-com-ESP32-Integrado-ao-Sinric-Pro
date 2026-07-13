@@ -1,67 +1,148 @@
-# Sistema de Automação Residencial com ESP32 e Sinric Pro
+# Sistema de Automação Residencial Inteligente (SmartHome IoT)
 
-# Descrição
+<div align="center">
 
-Este projeto faz parte do **Projeto Integrador I** da **UFSC (Campus Araranguá)**. O objetivo é desenvolver um sistema de automação acessível, permitindo o controle de dispositivos residenciais via web e comando de voz, e simultaneamente envolvendo o hardware (ESP32, sensores).
-# Objetivos do Projeto 
-* **Automatizar o Ar-Condicionado:** Controle inteligente de temperatura por histerese e segurança com corte baseado em porta aberta.
-* **Monitorizar Variáveis Ambientais:** Leitura em tempo real de temperatura e luminosidade local.
-* **Iluminação Inteligente:** Acionamento de cortesia temporizado baseado em sensor de presença/porta e luminosidade ambiente.
-* **Controlo Duplo (Híbrido):** Permitir a comutação estável entre o Modo Automático local e o Modo Manual remoto via dashboard.
+![GitHub Language Count](https://img.shields.io/github/languages/count/ManuelEtiene/Sistema-de-Automacao-Residencial-com-ESP32-Integrado-ao-Sinric-Pro?style=for-the-badge)
+![GitHub Top Language](https://img.shields.io/github/languages/top/ManuelEtiene/Sistema-de-Automacao-Residencial-com-ESP32-Integrado-ao-Sinric-Pro?style=for-the-badge&color=blue)
+![Backend](https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=nodedotjs)
+![Database](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)
 
+---
 
-# Funcionalidades
-* Controle de iluminação/cargas via interface web.
-* Monitoramento em tempo real (Feedback de estado).
-* Integração com assistentes de voz (Alexa).
-* Interface responsiva para dispositivos móveis.
+<img src="[INSERIR URL DA IMAGEM DO FRONT END NO NAVEGADOR AQUI]" alt="Dashboard Preview" width="800"/>
 
-# Tecnologias Utilizadas
+</div>
 
-* ## Hardware:
-* **Microcontrolador:** ESP32 (Arquitetura Xtensa Dual-Core de 32 bits, Wi-Fi e Bluetooth integrados).
-* **Sensores:** Sensor de pressão e temperatura BMP280 (I2C) e Sensor de Luminosidade LDR (Analógico).
-* **Atuadores:** Módulo Relé (Ar-Condicionado) e LED (Lâmpada da Sala).
-* **Interface Local:** Display LCD 16x2 com módulo adaptador I2C PCF8574.
-* **Plataforma Cloud:** Sinric Pro
-* 
-* # Software
-* Programação do ESP32 utilizando Arduino IDE
-* **Frontend:** HTML5, CSS3 e JavaScript
-* **Comunicação:** Wi-Fi e Protocolo MQTT/Websockets
- 
-### Transporte e Protocolos
-* **Rede:** Wi-Fi Local.
-* **Protocolo:** MQTT (Message Queuing Telemetry Transport) via HiveMQ Público (porta 1883).
-  * *Tópico Telemetria:* `mamadjam123/iot/sensores`
-  * *Tópico Comandos:* `mamadjam123/iot/comandos`
+---
 
-### Backend & Frontend
-* **Servidor & API:** Node.js com Express.
-* **Banco de Dados:** MongoDB com Mongoose (Armazenamento NoSQL de documentos com timestamp).
-* **Interface do Utilizador:** Dashboard responsivo com HTML5, CSS3, Bootstrap 5 e FontAwesome.
-* **Gráficos:** Chart.js atualizado via HTTP Polling estável a cada 3 segundos.
+## 📋 Sobre o Projeto
 
-## Lógica de Funcionamento
-### A. Modo Automático
-* **Gestão Térmica:** Se a temperatura for $\ge 26.0\text{ °C}$, o AC liga. Se arrefecer para $\le 24.0\text{ °C}$, desliga. Se a porta ficar aberta por mais de 10 segundos, o AC desliga preventivamente.
-* **Gestão de Iluminação:** A luz acende se a porta for aberta **E** a luminosidade for $< 40\%$. Ao fechar a porta, mantém-se ligada por 3 segundos como cortesia.
+Este projeto foi desenvolvido como parte do **Projeto Integrador** do curso de **Engenharia de Computação** da **UFSC (Campus Araranguá)**. O objetivo principal é implementar um ecossistema de automação residencial de ponta a ponta (Full-Stack IoT), controlando atuadores e monitorando variáveis ambientais.
 
-### B. Modo Manual
-Qualquer comando direto vindo da Dashboard (`AC_ON`, `AC_OFF`, `LUZ_ON`, `LUZ_OFF`) assume o controlo, desativando a automação local. O sistema retorna ao modo automático apenas quando o comando `AUTO_ON` for enviado.
+O sistema destaca-se pela sua arquitetura híbrida robusta (*Edge/Cloud*). O processamento crítico de automação roda localmente no microcontrolador (garantindo resiliência), enquanto o histórico e a monitorização global ocorrem na nuvem através de um servidor Node.js próprio integrado ao MongoDB, com interface via Dashboard Web.
 
-## Como Rodar o Projeto**
+---
 
+## ✨ Funcionalidades
 
-1. **Hardware:**
-   - Carregue o código `.ino` (Arduino IDE) para o seu ESP32.
-   - Configure as credenciais do seu Wi-Fi e as chaves do **Sinric Pro** no código.
+- **Monitoramento Ambiental Constante:** Leitura em tempo real de temperatura, umidade (BME280) e luminosidade (LDR).
+- **Gestão Térmica com Histerese:** Controle inteligente do ar-condicionado operando em janelas seguras de temperatura, evitando desgaste do compressor.
+- **Corte Preventivo de Energia:** Desligamento automático do ar-condicionado caso a porta permaneça aberta por mais de 10 segundos.
+- **Iluminação de Cortesia Inteligente:** Ativação automática da lâmpada ao abrir a porta em ambientes escuros (< 40%), com temporizador de desligamento suave de 3 segundos após o fechamento.
+- **Controle Híbrido Estável:** Transição perfeita entre o Modo Automático local e o Modo Manual via requisições do Dashboard.
 
-2. **Interface Web:**
-   - Clone este repositório.
-   - Abra o arquivo `index.html` no seu navegador.
-     
+---
 
+## 📂 Estrutura do Repositório
 
+O repositório está organizado para separar as lógicas de nuvem e borda:
 
+- 📁 `Backend_Frontend/`: Contém a API REST em Node.js (`server.js`), configurações do banco (`sensorData.js`), dependências (`package.json`) e a interface gráfica na pasta `public/` (HTML/CSS/JS).
+- 📁 `Hardware/`: Documentação isolada dos sensores (BMP280, LDR) e mapeamento de pinos (`Pinout.md`).
+- 📁 `Software/`: Código-fonte embarcado (`Firmware_ESP32.ino`) e tutoriais de compilação.
 
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+### Hardware
+- **Microcontrolador:** ESP32 (Wi-Fi integrado).
+- **Sensores:** BME280 (I2C), LDR em divisor de tensão e Chave Switch Tátil (Porta).
+- **Atuadores/Saídas:** Módulo Relé de 1 Canal, Display LCD 16x2 (I2C) e LED de status.
+
+### Software e Protocolos
+- **Backend:** Node.js com Express.
+- **Banco de Dados:** MongoDB (via Mongoose).
+- **Frontend:** HTML5, CSS3, JavaScript (HTTP Polling constante a cada 3s para evitar travamentos).
+- **Mensageria:** Protocolo MQTT (Broker Público HiveMQ - Porta 1883).
+
+---
+
+## 🗺️ Implementação do Hardware
+
+### Arquitetura de Circuitos e PCB
+
+<div align="center">
+  <table border="0">
+    <tr>
+      <td align="center"><b>Circuito Digital (Wokwi)</b><br/><img src="[INSERIR URL DA IMAGEM WOKWI AQUI]" width="380"/></td>
+      <td align="center"><b>Diagrama Elétrico</b><br/><img src="[INSERIR URL DA IMAGEM DIAGRAMA ELETRICO AQUI]" width="380"/></td>
+    </tr>
+    <tr>
+      <td align="center"><b>Esquemático da PCB</b><br/><img src="[INSERIR URL DA IMAGEM ESQUEMATICO PCB AQUI]" width="380"/></td>
+      <td align="center"><b>PCB Visualização Real (3D)</b><br/><img src="[INSERIR URL DA IMAGEM PCB REAL 3D AQUI]" width="380"/></td>
+    </tr>
+  </table>
+</div>
+
+### Mapeamento de Conexões (Pinout)
+
+*Consulte a pasta `/Hardware/Pinout.md` para as especificações completas.*
+
+| Periférico | Pino VCC | Pino GND | Pino Sinal / Barramento | Descrição |
+| :--- | :--- | :--- | :--- | :--- |
+| **Display LCD 16x2** | 5V (VIN) | GND | **SDA: GPIO 21 / SCL: GPIO 22** | Interface local (I2C). |
+| **Sensor BME280** | 3.3V | GND | **SDA: GPIO 21 / SCL: GPIO 22** | Dados ambientais (I2C). |
+| **Módulo Relé (AC)** | 5V (VIN) | GND | **IN: GPIO 25** | Digital OUTPUT. |
+| **Chave Switch** | N/A | GND | **Sinal: GPIO 14** | INPUT c/ Pull-up interno. |
+| **LDR (Luminosidade)**| 3.3V | GND | **Sinal: GPIO 34** | Analog INPUT. |
+| **LED Indicador** | N/A | GND | **Sinal: GPIO 2** | Digital OUTPUT. |
+
+---
+
+## 🧠 Lógica de Automação (Edge Computing)
+
+Toda a lógica temporal e de histerese roda de forma assíncrona usando `millis()`, garantindo que o sistema não congele as leituras.
+
+```text
+AUTOMAÇÃO DO AR-CONDICIONADO
+├── TEMPERATURA ≥ 26ºC ──> AC ON
+├── TEMPERATURA < 24ºC ──> AC OFF
+└── PORTA ABERTA > 10s ──> AC OFF (Bloqueio de Segurança)
+
+AUTOMAÇÃO DA ILUMINAÇÃO
+├── PORTA ABERTA + LUMINOSIDADE < 40% ──> LUZ ON (Ambiente Escuro)
+└── PORTA FECHADA ──────────────────────> LUZ OFF (Após 3 segundos)
+```
+
+---
+
+## 💻 Estrutura de Software (Back-end e Front-end)
+
+<div align="center">
+  <table border="0">
+    <tr>
+      <td align="center"><b>Servidor Backend (Node.js)</b><br/><img src="[INSERIR URL DA IMAGEM DO BACK END AQUI]" width="390"/></td>
+      <td align="center"><b>Interface de Controle (Frontend)</b><br/><img src="[INSERIR URL DA IMAGEM DO FRONT END NO NAVEGADOR AQUI]" width="390"/></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## 🚀 Como Rodar o Projeto
+
+### 1. Hardware e Firmware (ESP32)
+1. Abra `/Software/Firmware_ESP32.ino` na Arduino IDE.
+2. Instale as bibliotecas (`PubSubClient`, `ArduinoJson`, `Adafruit_BMP280`).
+3. Configure o Wi-Fi e certifique-se de que o Broker MQTT está apontando para o HiveMQ.
+4. Faça o upload do código para a placa.
+
+### 2. Backend (Servidor e Banco de Dados)
+1. Certifique-se de ter o Node.js instalado.
+2. Abra o terminal na pasta `Backend_Frontend/`.
+3. Execute `npm install` para instalar as dependências (Express, Mongoose, MQTT).
+4. Configure o seu arquivo `.env` com a sua URL de conexão do MongoDB.
+5. Inicie o servidor com `node server.js`.
+
+### 3. Frontend (Interface Web)
+1. Com o servidor Node rodando, a interface estará servida.
+2. Acesse pelo navegador a porta local definida no Express (ex: `http://localhost:3000`) ou abra o arquivo `index.html` caso esteja testando o layout isoladamente.
+
+---
+
+## Authors
+
+* **Adir Leonardo Arruda Brasil** ─ [GitHub](https://github.com/leunz)
+* **Mamadjan Jaló** ───────── [GitHub](https://github.com/JaloMamadjam)
+* **Manuel Etiene da Silva João** ─ [GitHub](https://github.com/ManuelEtiene) 
