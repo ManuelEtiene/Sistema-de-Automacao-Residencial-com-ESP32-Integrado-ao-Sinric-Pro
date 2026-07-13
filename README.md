@@ -1,4 +1,4 @@
-# Sistema de Automação Residencial com ESP32, Integrado ao Sirinc Pro
+# Sistema de Automação Residencial com ESP32
 
 <div align="center">
 
